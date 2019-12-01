@@ -1,4 +1,5 @@
 import React from 'react';
+import classNames from 'classnames';
 import CropFrame from './CropFrame';
 import './App.scss';
 
@@ -238,6 +239,7 @@ interface AppState {
   prevImageUrl: null | string,
   crop: Rectangle,
   cropState: Status,
+  imgError: boolean,
 }
 
 class App extends React.Component<AppProps, AppState> {
@@ -273,6 +275,7 @@ class App extends React.Component<AppProps, AppState> {
         right: 100,
       },
       cropState: Status.None,
+      imgError: false,
     };
   }
 
@@ -312,10 +315,20 @@ class App extends React.Component<AppProps, AppState> {
       const image = files[0];
       reader.onloadend = () => {
         const imageUrl = reader.result as string;
-        this.setState({ image, imageUrl, cropState: Status.Ready });
+        this.setState({
+          image,
+          imageUrl,
+          cropState: Status.Ready,
+          imgError: false,
+        });
       };
+      reader.onerror = this.handleImgError;
       reader.readAsDataURL(image);
     }
+  }
+
+  handleImgError = () => {
+    this.setState({ imgError: true });
   }
 
   handleCutClick = () => {
@@ -462,14 +475,25 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   renderForm() {
-    const { image } = this.state;
-    const name = image ? image.name : 'Choose file';
+    const { image, imgError } = this.state;
+    let name;
+    const labelClass = classNames({
+      'custom-file-label': true,
+      border: imgError,
+      'border-danger': imgError,
+    });
+
+    if (imgError) {
+      name = 'Invalid file type. Should be image. Please try again...';
+    } else {
+      name = image ? image.name : 'Choose file';
+    }
 
     return (
       <>
         <div className="row">
           <div className="custom-file">
-            <label className="custom-file-label" id="file-label" htmlFor="customFile">
+            <label className={labelClass} id="file-label" htmlFor="customFile">
               {name}
               <input type="file" className="custom-file-input" id="customFile" onChange={this.handleImgInput} />
             </label>
@@ -557,9 +581,14 @@ class App extends React.Component<AppProps, AppState> {
       <>
         <div className="row justify-content-center my-3">
           <div role="presentation" className="img-preview " onMouseDown={this.handleMouseDown} id="imgPreview">
-            <img src={imageUrl} className="upload-img border border-info" alt="" id="imageOriginal" />
-            {isCropping
-              && <CropFrame style={this.getCropStyle()} controls={resizeControls} />}
+            <img
+              src={imageUrl}
+              className="upload-img border border-info"
+              alt=""
+              id="imageOriginal"
+              onError={this.handleImgError}
+            />
+            {isCropping && <CropFrame style={this.getCropStyle()} controls={resizeControls} />}
           </div>
         </div>
         <div className="row justify-content-center my-5">
@@ -570,11 +599,13 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   render() {
+    const { imgError } = this.state;
+
     return (
       <div className="container">
         {this.renderForm()}
-        {this.renderButtons()}
-        {this.renderImage()}
+        {!imgError && this.renderButtons()}
+        {!imgError && this.renderImage()}
       </div>
     );
   }

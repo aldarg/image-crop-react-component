@@ -1,6 +1,6 @@
 import React from 'react';
 import CropFrame from './CropFrame';
-import './App.css';
+import './App.scss';
 
 enum Status {
   None = 'NONE',
@@ -232,9 +232,9 @@ const getOffset = (el: HTMLElement) => {
 interface AppProps { }
 
 interface AppState {
-  image: null | Blob,
+  image: null | File,
   imageUrl: null | string,
-  prevImage: null | Blob,
+  prevImage: null | File,
   prevImageUrl: null | string,
   crop: Rectangle,
   cropState: Status,
@@ -362,7 +362,7 @@ class App extends React.Component<AppProps, AppState> {
           const newImageUrl = reader.result as string;
           const { image, imageUrl } = this.state;
           this.setState({
-            image: blob as Blob,
+            image: blob as File,
             imageUrl: newImageUrl,
             prevImage: image,
             prevImageUrl: imageUrl,
@@ -462,12 +462,15 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   renderForm() {
+    const { image } = this.state;
+    const name = image ? image.name : 'Choose file';
+
     return (
       <>
         <div className="row">
           <div className="custom-file">
             <label className="custom-file-label" id="file-label" htmlFor="customFile">
-              Choose file
+              {name}
               <input type="file" className="custom-file-input" id="customFile" onChange={this.handleImgInput} />
             </label>
           </div>
@@ -481,10 +484,10 @@ class App extends React.Component<AppProps, AppState> {
     const cutDisabled = cropState === Status.None;
 
     return (
-      <div className="row justify-content-center">
+      <>
         <button
           type="button"
-          className="btn btn-primary btn-sm mb-2 mr-4"
+          className="btn btn-primary btn-sm mx-2"
           disabled={cutDisabled}
           id="cutBtn"
           onClick={this.handleCutClick}
@@ -493,23 +496,23 @@ class App extends React.Component<AppProps, AppState> {
         </button>
         <button
           type="button"
-          className="btn btn-primary btn-sm mb-2 mr-4"
+          className="btn btn-danger btn-sm mx-2"
           disabled={!prevImageUrl}
           id="cutBtn"
           onClick={this.handleUndoClick}
         >
             Undo
         </button>
-      </div>
+      </>
     );
   }
 
   renderOkCancelButtons() {
     return (
-      <div className="row justify-content-center">
+      <>
         <button
           type="button"
-          className="btn btn-success btn-sm mb-2 mr-1"
+          className="btn btn-success btn-sm mx-2"
           id="cutOkBtn"
           onClick={this.handleOkCutClick}
         >
@@ -517,13 +520,13 @@ class App extends React.Component<AppProps, AppState> {
         </button>
         <button
           type="button"
-          className="btn btn-danger btn-sm mb-2"
+          className="btn btn-danger btn-sm mx-2"
           id="cutCancelBtn"
           onClick={this.handleCancelCutClick}
         >
             Cancel
         </button>
-      </div>
+      </>
     )
   }
 
@@ -533,7 +536,7 @@ class App extends React.Component<AppProps, AppState> {
     const isCropping = cropState !== Status.None && cropState !== Status.Ready;
 
     return (
-      <div className="row justify-content-center">
+      <div className="row justify-content-center cut-btns">
         {isReadyToCut && this.renderCutUndoButtons()}
         {isCropping && this.renderOkCancelButtons()}
       </div>
@@ -554,7 +557,7 @@ class App extends React.Component<AppProps, AppState> {
       <>
         <div className="row justify-content-center my-3">
           <div role="presentation" className="img-preview " onMouseDown={this.handleMouseDown} id="imgPreview">
-            <img src={imageUrl} className="upload-img" alt="" id="imageOriginal" />
+            <img src={imageUrl} className="upload-img border border-info" alt="" id="imageOriginal" />
             {isCropping
               && <CropFrame style={this.getCropStyle()} controls={resizeControls} />}
           </div>

@@ -1,3 +1,6 @@
+$resize-control-width: 10px !default;
+$resize-control-height: 10px !default;
+
 .custom-file {
   width: 100%;
   margin-top: 20px;
@@ -10,6 +13,9 @@
 }
 .upload-img {
   max-width: 100%;
+}
+.cut-btns > .btn {
+  width: 60px;
 }
 .crop-selection {
   position: absolute;
@@ -25,8 +31,8 @@
 }
 .resize-control {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: $resize-control-width;
+  height: $resize-control-height;
   border: 1px solid;
   box-sizing: border-box;
   margin-top: -5px;

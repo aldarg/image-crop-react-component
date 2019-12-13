@@ -107,6 +107,12 @@ const getNewCrop = (start: Point, end: Point, parentSize: Rectangle): Rectangle 
   return checkCropBorders(newCrop, parentSize);
 };
 
+const getCurrentPoint = (e: MouseEvent | TouchEvent) => {
+  const { pageX, pageY } = e instanceof TouchEvent ? e.touches[0] : e;
+
+  return { x: pageX, y: pageY };
+};
+
 interface CropResizingDispatch {
   [key: string]: (
     crop: Rectangle,
@@ -281,13 +287,19 @@ class App extends React.Component<AppProps, AppState> {
 
   componentDidMount() {
     document.addEventListener('mousemove', this.handleMoving);
+    document.addEventListener('touchmove', this.handleMoving, { passive: false });
     document.addEventListener('mouseup', this.handleMouseUp);
+    document.addEventListener('touchend', this.handleMouseUp);
+    document.addEventListener('touchcancel', this.handleMouseUp);
     window.addEventListener('resize', this.handleWindowResize);
   }
 
   componentWillUnmount() {
     document.removeEventListener('mousemove', this.handleMoving);
+    document.removeEventListener('touchmove', this.handleMoving);
     document.removeEventListener('mouseup', this.handleMouseUp);
+    document.removeEventListener('touchend', this.handleMouseUp);
+    document.removeEventListener('touchcancel', this.handleMouseUp);
     window.removeEventListener('resize', this.handleWindowResize);
   }
 
@@ -395,21 +407,19 @@ class App extends React.Component<AppProps, AppState> {
     // TODO: uploading code here
   }
 
-  handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-
+  handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
     const { cropState } = this.state;
 
-    if (cropState === Status.None) {
+    if (cropState === Status.None || cropState === Status.Creating) {
       return;
     }
-
-    this.mouseStart = { x: e.pageX, y: e.pageY };
 
     const img = document.getElementById('imageOriginal');
     if (!img) {
       return;
     }
+
+    this.mouseStart = getCurrentPoint(e.nativeEvent);
 
     const offset = getOffset(img);
     this.parentSize = {
@@ -420,7 +430,8 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     if (e.target === img) {
-      this.setState({ cropState: Status.Creating });
+      const newCrop = getNewCrop(this.mouseStart, this.mouseStart, this.parentSize);
+      this.setState({ cropState: Status.Creating, crop: newCrop });
       return;
     }
 
@@ -437,8 +448,7 @@ class App extends React.Component<AppProps, AppState> {
     }
   }
 
-  handleMouseUp = (e: MouseEvent) => {
-    e.preventDefault();
+  handleMouseUp = () => {
     const { cropState } = this.state;
     if (cropState === Status.None || cropState === Status.Ready) {
       return;
@@ -447,10 +457,9 @@ class App extends React.Component<AppProps, AppState> {
     this.setState({ cropState: Status.Cropping });
   }
 
-  handleMoving = (e: MouseEvent) => {
+  handleMoving = (e: MouseEvent | TouchEvent) => {
     e.preventDefault();
-    const { pageX, pageY } = e;
-    const mouseCurrPoint = { x: pageX, y: pageY };
+    const mouseCurrPoint = getCurrentPoint(e);
     const { cropState } = this.state;
 
     switch (cropState) {
@@ -580,7 +589,13 @@ class App extends React.Component<AppProps, AppState> {
     return (
       <>
         <div className="row justify-content-center my-3">
-          <div role="presentation" className="img-preview " onMouseDown={this.handleMouseDown} id="imgPreview">
+          <div
+            role="presentation"
+            className="img-preview "
+            onMouseDown={this.handleMouseDown}
+            onTouchStart={this.handleMouseDown}
+            id="imgPreview"
+          >
             <img
               src={imageUrl}
               className="upload-img border border-info"

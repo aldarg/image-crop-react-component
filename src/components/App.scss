@@ -1,6 +1,11 @@
 $resize-control-width: 10px !default;
 $resize-control-height: 10px !default;
 
+$mobile-media-query: '(pointer: coarse)' !default;
+
+$resize-control-mobile-width: 20px !default;
+$resize-control-mobile-height: 20px !default;
+
 .custom-file {
   width: 100%;
   margin-top: 20px;
@@ -35,8 +40,8 @@ $resize-control-height: 10px !default;
   height: $resize-control-height;
   border: 1px solid;
   box-sizing: border-box;
-  margin-top: -5px;
-  margin-left: -5px;
+  margin-top: -($resize-control-height / 2);
+  margin-left: -($resize-control-width / 2);
 }
 .ord-nw {
   top: 0;
@@ -57,4 +62,13 @@ $resize-control-height: 10px !default;
   top: 100%;
   left: 100%;
   cursor: se-resize;
+}
+
+@media #{$mobile-media-query} {
+  .resize-control {
+    width: $resize-control-mobile-width;
+    height: $resize-control-mobile-height;
+    margin-top: -($resize-control-mobile-height / 2);
+    margin-left: -($resize-control-mobile-width / 2);
+  }
 }
